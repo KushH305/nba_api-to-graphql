@@ -41,3 +41,9 @@ def get_player_by_name(name: str):
         if full_name == name_lower:
             return p
     return None
+
+def get_player_by_id(player_id: int):
+    for p in HEAT_ROSTER_2025_26:
+        if p["id"] == player_id:
+            return p
+    return None
