@@ -27,3 +27,5 @@ Phase 5 — Polish & deploy
 
 Deploy backend (Render/Railway/Fly.io all have free tiers friendly to Python) and frontend (Vercel/Netlify/GitHub Pages)
 Add a README that reads like a case study, since this doubles as your coffee-chat leave-behind
+
+Tickets:
