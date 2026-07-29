@@ -31,19 +31,40 @@ def get_call_count():
 def reset_call_count():
     _call_count["count"] = 0
 
+# --- Retry wrapper, handles BallDontLie's 5 req/min rate limit ---
+def _request_with_retry(url, params=None, max_retries=3, backoff_seconds=15, timeout=15):
+    for attempt in range(max_retries):
+        response = requests.get(url, headers=HEADERS, params=params, timeout=timeout)
+
+        if response.status_code == 429:
+            print(f"Rate limited, waiting {backoff_seconds}s (attempt {attempt + 1}/{max_retries})...")
+            time.sleep(backoff_seconds)
+            continue
+
+        response.raise_for_status()
+        return response
+
+    raise Exception("Max retries exceeded due to rate limiting")
+
 # --- Public functions ---
-def get_team(team_id: int):
-    cache_key = f"team:{team_id}"
-    cached = _get_cached(cache_key)
-    if cached:
-        return cached
+_all_teams_cache = {"data": None, "timestamp": 0}
+ALL_TEAMS_CACHE_TTL_SECONDS = 3600
+
+def _get_all_teams():
+    now = time.time()
+    if _all_teams_cache["data"] and (now - _all_teams_cache["timestamp"] < ALL_TEAMS_CACHE_TTL_SECONDS):
+        return _all_teams_cache["data"]
 
     _call_count["count"] += 1
-    response = requests.get(f"{BASE_URL}/v1/teams/{team_id}", headers=HEADERS, timeout=15)
-    response.raise_for_status()
+    response = _request_with_retry(f"{BASE_URL}/v1/teams", params={"per_page": 30})
     data = response.json()["data"]
-    _set_cache(cache_key, data)
+    _all_teams_cache["data"] = data
+    _all_teams_cache["timestamp"] = now
     return data
+
+def get_team(team_id: int):
+    all_teams = _get_all_teams()
+    return next((t for t in all_teams if t["id"] == team_id), None)
 
 def get_team_games(team_id: int, season: int = 2024, limit: int = 10):
     cache_key = f"games:{team_id}:{season}:{limit}"
@@ -52,13 +73,10 @@ def get_team_games(team_id: int, season: int = 2024, limit: int = 10):
         return cached
 
     _call_count["count"] += 1
-    response = requests.get(
+    response = _request_with_retry(
         f"{BASE_URL}/v1/games",
-        headers=HEADERS,
         params={"team_ids[]": team_id, "seasons[]": season, "per_page": limit},
-        timeout=15,
     )
-    response.raise_for_status()
     data = response.json()["data"]
     _set_cache(cache_key, data)
     return data
@@ -74,11 +92,9 @@ def get_team_games_batch(team_ids: list, season: int = 2024, limit_per_team: int
         return cached
 
     _call_count["count"] += 1
-    response = requests.get(
+    response = _request_with_retry(
         f"{BASE_URL}/v1/games",
-        headers=HEADERS,
         params={"team_ids[]": team_ids, "seasons[]": season, "per_page": limit_per_team * len(team_ids)},
-        timeout=15,
     )
     response.raise_for_status()
     data = response.json()["data"]

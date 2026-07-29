@@ -1,5 +1,5 @@
 import strawberry
-from typing import Optional
+from typing import List, Optional
 from backend.shared.manual_roster_data import get_player_by_name, get_player_by_id, HEAT_ROSTER_2025_26
 from backend.shared.balldontlie_client import get_team, get_team_games
 
@@ -38,9 +38,10 @@ class Team:
         return [_to_player_type(p) for p in HEAT_ROSTER_2025_26]
 
     @strawberry.field
-    def recent_games(self, limit: int = 5) -> list[Game]:
-        games_data = get_team_games(self.id, season=2024, limit=limit)
-        return [_to_game_type(g) for g in games_data]
+    async def recent_games(self, info: strawberry.Info, limit: int = 5) -> list[Game]:
+        games_loader = info.context["games_loader"]
+        team_games_list = await games_loader.load(self.id)
+        return [_to_game_type(g) for g in team_games_list]
 
 
 def _to_player_type(data: dict) -> Player:
@@ -97,6 +98,15 @@ class Query:
         if not data:
             return None
         return _to_team_type(data) if data else None
+
+    @strawberry.field
+    def teams(self, ids: List[int]) -> list[Team]:
+        teams = []
+        for team_id in ids:
+            data = get_team(team_id)
+            if data:
+                teams.append(_to_team_type(data))
+        return teams
 
 
 schema = strawberry.Schema(query=Query)
