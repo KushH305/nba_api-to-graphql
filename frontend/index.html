@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>REST vs GraphQL — Miami Heat Data</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<header class="scoreboard-header">
+  <p class="eyebrow">MIA · Data Layer Matchup</p>
+  <h1>REST <span class="vs">vs</span> GraphQL</h1>
+  <p class="subhead">Same Miami Heat data, two ways to ask for it.</p>
+</header>
+
+<nav class="scenario-select" role="tablist" aria-label="Query scenario">
+  <div class="progress-track" id="progress-track" aria-hidden="true">
+    <div class="progress-fill" id="progress-fill"></div>
+  </div>
+  <button type="button" class="scenario-btn active" data-scenario="1" onclick="runScenario(1, this)">
+    Player bio
+  </button>
+  <button type="button" class="scenario-btn" data-scenario="2" onclick="runScenario(2, this)">
+    Team + roster + games
+  </button>
+  <button type="button" class="scenario-btn" data-scenario="3" onclick="runScenario(3, this)">
+    5 teams' games
+  </button>
+</nav>
+
+<main class="matchup">
+
+<section class="panel panel-rest" aria-label="REST response">
+  <div class="panel-tag-row">
+    <div class="panel-tag">AWAY · REST</div>
+    <button type="button" class="expand-btn" onclick="openModal('rest')" aria-label="Expand REST response">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg>
+      Expand
+    </button>
+  </div>
+  <pre id="rest-output" class="response-body">Pick a scenario above to run it.</pre>
+  <div class="stat-line">
+    <div class="stat"><span class="stat-value" id="rest-time">—</span><span class="stat-label">ms</span></div>
+    <div class="stat"><span class="stat-value" id="rest-size">—</span><span class="stat-label">bytes</span></div>
+    <div class="stat"><span class="stat-value" id="rest-calls">—</span><span class="stat-label">requests</span></div>
+  </div>
+</section>
+
+<div class="vs-divider" aria-hidden="true">VS</div>
+
+<section class="panel panel-graphql" aria-label="GraphQL response">
+  <div class="panel-tag-row">
+    <div class="panel-tag">HOME · GRAPHQL</div>
+    <button type="button" class="expand-btn" onclick="openModal('graphql')" aria-label="Expand GraphQL response">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg>
+      Expand
+    </button>
+  </div>
+  <pre id="graphql-output" class="response-body">Pick a scenario above to run it.</pre>
+  <div class="stat-line">
+    <div class="stat"><span class="stat-value" id="graphql-time">—</span><span class="stat-label">ms</span></div>
+    <div class="stat"><span class="stat-value" id="graphql-size">—</span><span class="stat-label">bytes</span></div>
+    <div class="stat"><span class="stat-value" id="graphql-calls">—</span><span class="stat-label">requests</span></div>
+  </div>
+</section>
+
+</main>
+
+<p class="rate-limit-note" id="status-note">Both servers must be running locally (ports 8000 and 8001).</p>
+
+<script src="app.js"></script>
+
+<div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBackdrop(event)">
+  <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-header">
+      <span class="modal-tag" id="modal-tag">RESPONSE</span>
+      <h2 id="modal-title">Full response</h2>
+      <div class="modal-actions">
+        <button type="button" class="copy-btn" id="copy-btn" onclick="copyModalContent()">Copy</button>
+        <button type="button" class="close-btn" onclick="closeModal()" aria-label="Close">✕</button>
+      </div>
+    </div>
+    <pre class="modal-body"><code id="modal-code"></code></pre>
+  </div>
+</div>
+
+</body>
+</html>
