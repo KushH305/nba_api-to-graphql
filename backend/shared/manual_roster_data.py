@@ -7,6 +7,9 @@ active or retired. The `Active Players` endpoint that would solve this
 is paid-tier only.
 """
 
+HEAT_TEAM_ID = 16
+
+
 HEAT_ROSTER_2025_26 = [
     # Core Players
     {"id": 1, "first_name": "Bam", "last_name": "Adebayo", "position": "C-F", "height": "6-9", "weight": "255", "jersey_number": "13", "college": "Kentucky", "country": "USA"},
@@ -47,3 +50,8 @@ def get_player_by_id(player_id: int):
         if p["id"] == player_id:
             return p
     return None
+
+def get_team_roster(team_id: int):
+    if team_id == HEAT_TEAM_ID:  # Miami Heat
+        return HEAT_ROSTER_2025_26
+    return []

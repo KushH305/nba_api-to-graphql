@@ -1,6 +1,6 @@
 import strawberry
 from typing import List, Optional
-from backend.shared.manual_roster_data import get_player_by_name, get_player_by_id, HEAT_ROSTER_2025_26
+from backend.shared.manual_roster_data import get_player_by_name, get_player_by_id, get_team_roster, HEAT_ROSTER_2025_26
 from backend.shared.balldontlie_client import get_team, get_team_games
 
 HEAT_TEAM_ID = 16  # Miami Heat
@@ -35,7 +35,7 @@ class Team:
 
     @strawberry.field
     def roster(self) -> list[Player]:
-        return [_to_player_type(p) for p in HEAT_ROSTER_2025_26]
+        return [_to_player_type(p) for p in get_team_roster(self.id)]
 
     @strawberry.field
     async def recent_games(self, info: strawberry.Info, limit: int = 5) -> list[Game]:
