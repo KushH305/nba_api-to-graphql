@@ -12,14 +12,16 @@
 
 <header class="scoreboard-header">
   <p class="eyebrow">MIA · Data Layer Matchup</p>
-  <h1>REST <span class="vs">vs</span> GraphQL</h1>
-  <p class="subhead">Same Miami Heat data, two ways to ask for it.</p>
+  <h1>REST<span class="vs">vs</span> GraphQL</h1>
+  <p class="subhead">Miami Heat data, visualized in two different approaches.</p>
 </header>
 
-<nav class="scenario-select" role="tablist" aria-label="Query scenario">
-  <div class="progress-track" id="progress-track" aria-hidden="true">
-    <div class="progress-fill" id="progress-fill"></div>
-  </div>
+<div class="mode-toggle" role="tablist" aria-label="Demo mode">
+  <button type="button" class="mode-btn active" id="mode-presets-btn" onclick="setMode('presets')">Presets</button>
+  <button type="button" class="mode-btn" id="mode-builder-btn" onclick="setMode('builder')">Build your own</button>
+</div>
+
+<nav class="scenario-select" id="scenario-select" role="tablist" aria-label="Query scenario">
   <button type="button" class="scenario-btn active" data-scenario="1" onclick="runScenario(1, this)">
     Player bio
   </button>
@@ -31,47 +33,129 @@
   </button>
 </nav>
 
+<section class="builder-panel" id="builder-panel" aria-label="Custom query builder">
+  <div class="builder-row">
+    <label>Team</label>
+    <span class="team-locked">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l7 4v6c0 5-3.5 8.5-7 10-3.5-1.5-7-5-7-10V6l7-4z"/></svg>
+      Miami Heat
+    </span>
+    <span class="team-locked-note">(roster data only exists for the Heat — see project notes)</span>
+  </div>
+
+  <div class="builder-columns">
+    <div class="field-group">
+      <p class="field-group-title">Team fields</p>
+      <label><input type="checkbox" class="team-field" value="fullName" checked onchange="renderQueryPreview()"> Full name</label>
+      <label><input type="checkbox" class="team-field" value="conference" onchange="renderQueryPreview()"> Conference</label>
+      <label><input type="checkbox" class="team-field" value="division" onchange="renderQueryPreview()"> Division</label>
+    </div>
+
+    <div class="field-group">
+      <p class="field-group-title">
+        <label><input type="checkbox" id="include-roster" onchange="toggleRosterFields(); renderQueryPreview()"> Roster</label>
+      </p>
+      <div id="roster-fields" class="nested-fields disabled">
+        <label><input type="checkbox" class="roster-field" value="firstName" checked onchange="renderQueryPreview()"> First name</label>
+        <label><input type="checkbox" class="roster-field" value="lastName" checked onchange="renderQueryPreview()"> Last name</label>
+        <label><input type="checkbox" class="roster-field" value="position" onchange="renderQueryPreview()"> Position</label>
+        <label><input type="checkbox" class="roster-field" value="height" onchange="renderQueryPreview()"> Height</label>
+        <label><input type="checkbox" class="roster-field" value="jerseyNumber" onchange="renderQueryPreview()"> Jersey #</label>
+        <label><input type="checkbox" class="roster-field" value="college" onchange="renderQueryPreview()"> College</label>
+      </div>
+    </div>
+
+    <div class="field-group">
+      <p class="field-group-title">
+        <label><input type="checkbox" id="include-games" onchange="toggleGamesFields(); renderQueryPreview()"> Recent games</label>
+      </p>
+      <div id="games-fields" class="nested-fields disabled">
+        <label><input type="checkbox" class="games-field" value="date" checked onchange="renderQueryPreview()"> Date</label>
+        <label><input type="checkbox" class="games-field" value="homeTeamAbbr" checked onchange="renderQueryPreview()"> Home team</label>
+        <label><input type="checkbox" class="games-field" value="visitorTeamAbbr" checked onchange="renderQueryPreview()"> Visitor team</label>
+        <label><input type="checkbox" class="games-field" value="homeScore" onchange="renderQueryPreview()"> Home score</label>
+        <label><input type="checkbox" class="games-field" value="visitorScore" onchange="renderQueryPreview()"> Visitor score</label>
+        <label class="limit-row">
+          Limit
+          <input type="number" id="games-limit" value="5" min="1" max="10" onchange="renderQueryPreview()">
+        </label>
+      </div>
+    </div>
+  </div>
+
+  <div class="query-preview">
+    <p class="field-group-title">Generated GraphQL query</p>
+    <pre id="query-preview-text" class="response-body"></pre>
+  </div>
+
+  <button type="button" class="run-btn" id="run-builder-btn" onclick="runCustomQuery()">Run this query</button>
+</section>
+
+<div class="progress-track" id="progress-track" aria-hidden="true">
+  <div class="progress-fill" id="progress-fill"></div>
+</div>
+
 <main class="matchup">
 
-<section class="panel panel-rest" aria-label="REST response">
-  <div class="panel-tag-row">
-    <div class="panel-tag">AWAY · REST</div>
-    <button type="button" class="expand-btn" onclick="openModal('rest')" aria-label="Expand REST response">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg>
-      Expand
-    </button>
-  </div>
-  <pre id="rest-output" class="response-body">Pick a scenario above to run it.</pre>
-  <div class="stat-line">
-    <div class="stat"><span class="stat-value" id="rest-time">—</span><span class="stat-label">ms</span></div>
-    <div class="stat"><span class="stat-value" id="rest-size">—</span><span class="stat-label">bytes</span></div>
-    <div class="stat"><span class="stat-value" id="rest-calls">—</span><span class="stat-label">requests</span></div>
-  </div>
-</section>
+  <section class="panel panel-rest" aria-label="REST response">
+    <div class="panel-tag-row">
+      <div class="panel-tag">AWAY · REST</div>
+      <button type="button" class="expand-btn" onclick="openModal('rest')" aria-label="Expand REST response">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg>
+        Expand
+      </button>
+    </div>
+    <pre id="rest-output" class="response-body">Pick a scenario above to run it.</pre>
+    <div class="stat-line">
+      <div class="stat"><span class="stat-value" id="rest-time">—</span><span class="stat-label">ms</span></div>
+      <div class="stat"><span class="stat-value" id="rest-size">—</span><span class="stat-label">bytes</span></div>
+      <div class="stat"><span class="stat-value" id="rest-calls">—</span><span class="stat-label">requests</span></div>
+    </div>
+  </section>
 
-<div class="vs-divider" aria-hidden="true">VS</div>
+  <div class="vs-divider" aria-hidden="true">VS</div>
 
-<section class="panel panel-graphql" aria-label="GraphQL response">
-  <div class="panel-tag-row">
-    <div class="panel-tag">HOME · GRAPHQL</div>
-    <button type="button" class="expand-btn" onclick="openModal('graphql')" aria-label="Expand GraphQL response">
-      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg>
-      Expand
-    </button>
-  </div>
-  <pre id="graphql-output" class="response-body">Pick a scenario above to run it.</pre>
-  <div class="stat-line">
-    <div class="stat"><span class="stat-value" id="graphql-time">—</span><span class="stat-label">ms</span></div>
-    <div class="stat"><span class="stat-value" id="graphql-size">—</span><span class="stat-label">bytes</span></div>
-    <div class="stat"><span class="stat-value" id="graphql-calls">—</span><span class="stat-label">requests</span></div>
-  </div>
-</section>
+  <section class="panel panel-graphql" aria-label="GraphQL response">
+    <div class="panel-tag-row">
+      <div class="panel-tag">HOME · GRAPHQL</div>
+      <button type="button" class="expand-btn" onclick="openModal('graphql')" aria-label="Expand GraphQL response">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4M15 3h4a2 2 0 0 1 2 2v4M9 21H5a2 2 0 0 1-2-2v-4M15 21h4a2 2 0 0 0 2-2v-4"/></svg>
+        Expand
+      </button>
+    </div>
+    <pre id="graphql-output" class="response-body">Pick a scenario above to run it.</pre>
+    <div class="stat-line">
+      <div class="stat"><span class="stat-value" id="graphql-time">—</span><span class="stat-label">ms</span></div>
+      <div class="stat"><span class="stat-value" id="graphql-size">—</span><span class="stat-label">bytes</span></div>
+      <div class="stat"><span class="stat-value" id="graphql-calls">—</span><span class="stat-label">requests</span></div>
+    </div>
+  </section>
 
 </main>
 
-<p class="rate-limit-note" id="status-note">Both servers must be running locally (ports 8000 and 8001).</p>
+<section class="coming-soon" aria-label="Additional project content, coming soon">
+  <h2 class="coming-soon-title">More on this project</h2>
+  <div class="coming-soon-grid">
+    <div class="coming-soon-card">
+      <div class="coming-soon-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z"/></svg>
+      </div>
+      <p class="coming-soon-label">Blog post</p>
+      <p class="coming-soon-desc">The full write-up — schema design decisions, the N+1 problem hit and fixed with real numbers, benchmark methodology (including a few of my own mistakes along the way), and what building this taught me about REST vs GraphQL tradeoffs.</p>
+      <span class="coming-soon-badge">Coming soon</span>
+    </div>
+    <div class="coming-soon-card">
+      <div class="coming-soon-icon">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
+      </div>
+      <p class="coming-soon-label">Architecture diagram</p>
+      <p class="coming-soon-desc">A system diagram showing how data flows from BallDontLie's API through the shared caching/batching layer into the GraphQL and REST servers, and out to this frontend.</p>
+      <span class="coming-soon-badge">Coming soon</span>
+    </div>
+  </div>
+</section>
 
-<script src="app.js"></script>
+<p class="rate-limit-note" id="status-note">Both servers must be running locally (ports 8000 and 8001).</p>
 
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBackdrop(event)">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -87,5 +171,6 @@
   </div>
 </div>
 
+<script src="app.js"></script>
 </body>
 </html>

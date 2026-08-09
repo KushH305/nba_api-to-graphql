@@ -1,5 +1,6 @@
 const GRAPHQL_URL = "http://127.0.0.1:8000/graphql";
 const REST_BASE = "http://127.0.0.1:8001";
+const HEAT_TEAM_ID = 16; // this POC only has real roster data for the Heat
 
 const SCENARIOS = {
   1: {
@@ -21,17 +22,96 @@ const SCENARIOS = {
 };
 
 const statusNote = document.getElementById("status-note");
+const lastResponse = { rest: null, graphql: null };
 
+// --- Mode toggle: presets vs builder ---
+function setMode(mode) {
+  document.getElementById("mode-presets-btn").classList.toggle("active", mode === "presets");
+  document.getElementById("mode-builder-btn").classList.toggle("active", mode === "builder");
+  document.getElementById("scenario-select").style.display = mode === "presets" ? "flex" : "none";
+  document.getElementById("builder-panel").classList.toggle("active", mode === "builder");
+  if (mode === "builder") renderQueryPreview();
+}
+
+function toggleRosterFields() {
+  const checked = document.getElementById("include-roster").checked;
+  document.getElementById("roster-fields").classList.toggle("disabled", !checked);
+}
+
+function toggleGamesFields() {
+  const checked = document.getElementById("include-games").checked;
+  document.getElementById("games-fields").classList.toggle("disabled", !checked);
+}
+
+// --- Build query + REST url list from current checkbox state (Heat only) ---
+function buildCustomScenario() {
+  const teamId = HEAT_TEAM_ID;
+
+  const teamFields = [...document.querySelectorAll(".team-field:checked")].map(el => el.value);
+  const includeRoster = document.getElementById("include-roster").checked;
+  const rosterFields = [...document.querySelectorAll(".roster-field:checked")].map(el => el.value);
+  const includeGames = document.getElementById("include-games").checked;
+  const gamesFields = [...document.querySelectorAll(".games-field:checked")].map(el => el.value);
+  const gamesLimit = document.getElementById("games-limit").value || 5;
+
+  const hasAnyField = teamFields.length > 0
+    || (includeRoster && rosterFields.length > 0)
+    || (includeGames && gamesFields.length > 0);
+
+  if (!hasAnyField) return null;
+
+  let innerParts = [...teamFields];
+  if (includeRoster && rosterFields.length > 0) {
+    innerParts.push(`roster { ${rosterFields.join(" ")} }`);
+  }
+  if (includeGames && gamesFields.length > 0) {
+    innerParts.push(`recentGames(limit: ${gamesLimit}) { ${gamesFields.join(" ")} }`);
+  }
+
+  const graphqlQuery = `{ team(id: ${teamId}) { ${innerParts.join(" ")} } }`;
+
+  const restUrls = [`${REST_BASE}/teams/${teamId}`];
+  if (includeRoster && rosterFields.length > 0) restUrls.push(`${REST_BASE}/teams/${teamId}/roster`);
+  if (includeGames && gamesFields.length > 0) restUrls.push(`${REST_BASE}/teams/${teamId}/games?limit=${gamesLimit}`);
+
+  return { graphql: graphqlQuery, rest: restUrls };
+}
+
+function renderQueryPreview() {
+  const scenario = buildCustomScenario();
+  const previewEl = document.getElementById("query-preview-text");
+  const runBtn = document.getElementById("run-builder-btn");
+
+  if (!scenario) {
+    previewEl.textContent = "Select at least one field to build a query.";
+    runBtn.disabled = true;
+    return;
+  }
+
+  previewEl.textContent = scenario.graphql;
+  runBtn.disabled = false;
+}
+
+async function runCustomQuery() {
+  const scenario = buildCustomScenario();
+  if (!scenario) return;
+  await executeScenario(scenario);
+}
+
+// --- Presets ---
 async function runScenario(num, btnEl) {
   document.querySelectorAll(".scenario-btn").forEach(b => b.classList.remove("active"));
   btnEl.classList.add("active");
+  await executeScenario(SCENARIOS[num]);
+}
 
-  const buttons = document.querySelectorAll(".scenario-btn");
+// --- Shared execution path for both presets and the builder ---
+async function executeScenario(scenario) {
+  const buttons = document.querySelectorAll(".scenario-btn, .run-btn, .mode-btn");
   buttons.forEach(b => (b.disabled = true));
   statusNote.textContent = "Running…";
   document.getElementById("progress-track").classList.add("active");
 
-  const scenario = SCENARIOS[num];
   await Promise.all([
     runGraphQL(scenario.graphql),
     runRest(scenario.rest),
@@ -41,70 +121,6 @@ async function runScenario(num, btnEl) {
   statusNote.textContent = "Both servers must be running locally (ports 8000 and 8001).";
   document.getElementById("progress-track").classList.remove("active");
 }
-
-async function runGraphQL(query) {
-  const outputEl = document.getElementById("graphql-output");
-  outputEl.classList.remove("is-error");
-
-  try {
-    const start = performance.now();
-    const resp = await fetch(GRAPHQL_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ query }),
-    });
-    const text = await resp.text();
-    const duration = performance.now() - start;
-
-    if (!resp.ok) throw new Error(`Server responded ${resp.status}`);
-
-    const parsed = JSON.parse(text);
-    lastResponse.graphql = parsed;
-    outputEl.innerHTML = syntaxHighlight(JSON.stringify(parsed, null, 2));
-    setStats("graphql", duration, new Blob([text]).size, 1);
-  } catch (err) {
-    outputEl.classList.add("is-error");
-    outputEl.textContent = `Request failed: ${err.message}\n\nIs the GraphQL server running on port 8000?`;
-    setStats("graphql", "—", "—", "—");
-  }
-}
-
-async function runRest(urls) {
-  const outputEl = document.getElementById("rest-output");
-  outputEl.classList.remove("is-error");
-
-  try {
-    const start = performance.now();
-    let totalBytes = 0;
-    const results = [];
-
-    for (const url of urls) {
-      const resp = await fetch(url);
-      const text = await resp.text();
-      if (!resp.ok) throw new Error(`Server responded ${resp.status} for ${url}`);
-      totalBytes += new Blob([text]).size;
-      results.push(JSON.parse(text));
-    }
-
-    const duration = performance.now() - start;
-    lastResponse.rest = results;
-    outputEl.innerHTML = syntaxHighlight(JSON.stringify(results, null, 2));
-    setStats("rest", duration, totalBytes, urls.length);
-  } catch (err) {
-    outputEl.classList.add("is-error");
-    outputEl.textContent = `Request failed: ${err.message}\n\nIs the REST server running on port 8001?`;
-    setStats("rest", "—", "—", "—");
-  }
-}
-
-function setStats(prefix, time, size, calls) {
-  document.getElementById(`${prefix}-time`).textContent = typeof time === "number" ? time.toFixed(1) : time;
-  document.getElementById(`${prefix}-size`).textContent = size;
-  document.getElementById(`${prefix}-calls`).textContent = calls;
-}
-
-// Store the last successful raw responses so the modal can show them
-const lastResponse = { rest: null, graphql: null };
 
 // --- JSON syntax highlighter ---
 function syntaxHighlight(jsonString) {
@@ -162,4 +178,74 @@ function copyModalContent() {
     btn.textContent = "Copied!";
     setTimeout(() => (btn.textContent = original), 1200);
   });
+}
+
+// --- Fetch execution ---
+async function runGraphQL(query) {
+  const outputEl = document.getElementById("graphql-output");
+  outputEl.classList.remove("is-error");
+
+  try {
+    const start = performance.now();
+    const resp = await fetch(GRAPHQL_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query }),
+    });
+    const text = await resp.text();
+    const duration = performance.now() - start;
+
+    if (!resp.ok) throw new Error(`Server responded ${resp.status}`);
+
+    const parsed = JSON.parse(text);
+    lastResponse.graphql = parsed;
+    outputEl.innerHTML = syntaxHighlight(JSON.stringify(parsed, null, 2));
+    setStats("graphql", duration, new Blob([text]).size, 1);
+  } catch (err) {
+    outputEl.classList.add("is-error");
+    if (err instanceof TypeError) {
+      outputEl.textContent = `Can't reach the server.\n\nMake sure it's running: uvicorn ... --port 8000\n\n(${err.message})`;
+    } else {
+      outputEl.textContent = `Server error: ${err.message}`;
+    }
+    setStats("graphql", "—", "—", "—");
+  }
+}
+
+async function runRest(urls) {
+  const outputEl = document.getElementById("rest-output");
+  outputEl.classList.remove("is-error");
+
+  try {
+    const start = performance.now();
+    let totalBytes = 0;
+    const results = [];
+
+    for (const url of urls) {
+      const resp = await fetch(url);
+      const text = await resp.text();
+      if (!resp.ok) throw new Error(`Server responded ${resp.status} for ${url}`);
+      totalBytes += new Blob([text]).size;
+      results.push(JSON.parse(text));
+    }
+
+    const duration = performance.now() - start;
+    lastResponse.rest = results;
+    outputEl.innerHTML = syntaxHighlight(JSON.stringify(results, null, 2));
+    setStats("rest", duration, totalBytes, urls.length);
+  } catch (err) {
+    outputEl.classList.add("is-error");
+    if (err instanceof TypeError) {
+      outputEl.textContent = `Can't reach the server.\n\nMake sure it's running: uvicorn ... --port 8001\n\n(${err.message})`;
+    } else {
+      outputEl.textContent = `Server error: ${err.message}`;
+    }
+    setStats("rest", "—", "—", "—");
+  }
+}
+
+function setStats(prefix, time, size, calls) {
+  document.getElementById(`${prefix}-time`).textContent = typeof time === "number" ? time.toFixed(1) : time;
+  document.getElementById(`${prefix}-size`).textContent = size;
+  document.getElementById(`${prefix}-calls`).textContent = calls;
 }
