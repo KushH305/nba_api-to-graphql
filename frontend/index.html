@@ -134,29 +134,15 @@
 </main>
 
 <section class="coming-soon" aria-label="Additional project content, coming soon">
-  <h2 class="coming-soon-title">More on this project</h2>
-  <div class="coming-soon-grid">
-    <div class="coming-soon-card">
-      <div class="coming-soon-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z"/></svg>
-      </div>
-      <p class="coming-soon-label">Blog post</p>
-      <p class="coming-soon-desc">The full write-up — schema design decisions, the N+1 problem hit and fixed with real numbers, benchmark methodology (including a few of my own mistakes along the way), and what building this taught me about REST vs GraphQL tradeoffs.</p>
-      <span class="coming-soon-badge">Coming soon</span>
-    </div>
-    <div class="coming-soon-card">
-      <div class="coming-soon-icon">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>
-      </div>
-      <p class="coming-soon-label">Architecture diagram</p>
-      <p class="coming-soon-desc">A system diagram showing how data flows from BallDontLie's API through the shared caching/batching layer into the GraphQL and REST servers, and out to this frontend.</p>
-      <span class="coming-soon-badge">Coming soon</span>
-    </div>
+  <a href="blog.html" class="coming-soon-card">
+  <div class="coming-soon-icon">
+    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 4.5A2.5 2.5 0 0 1 6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15z"/></svg>
   </div>
+  <p class="coming-soon-label">Blog post</p>
+  <p class="coming-soon-desc">The full write-up — schema design decisions, the N+1 problem hit and fixed with real numbers, benchmark methodology, and what building this taught me about REST vs GraphQL tradeoffs.</p>
+  <span class="coming-soon-badge">Read it →</span>
+</a>
 </section>
-
-<p class="rate-limit-note" id="status-note">Both servers must be running locally (ports 8000 and 8001).</p>
-
 <div class="modal-overlay" id="modal-overlay" onclick="closeModalOnBackdrop(event)">
   <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
     <div class="modal-header">

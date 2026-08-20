@@ -605,3 +605,14 @@ body {
   from { opacity: 0; }
   to { opacity: 1; }
 }
+
+.coming-soon-card {
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: border-color 0.15s ease;
+}
+
+.coming-soon-card:hover {
+  border-color: var(--heat-gold);
+}

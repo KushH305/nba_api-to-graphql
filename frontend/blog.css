@@ -1,0 +1,141 @@
+.blog-body {
+  max-width: 720px;
+}
+
+.back-link {
+  display: inline-block;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  text-decoration: none;
+  margin-bottom: 1.5rem;
+  transition: color 0.15s ease;
+}
+
+.back-link:hover {
+  color: var(--heat-gold);
+}
+
+.back-link-bottom {
+  margin-top: 2rem;
+}
+
+.blog-header {
+  text-align: left;
+  margin-bottom: 2.5rem;
+}
+
+.blog-header h1 {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: clamp(1.7rem, 4vw, 2.4rem);
+  text-transform: none;
+  letter-spacing: 0.01em;
+  margin: 0.4rem 0;
+}
+
+.blog-article {
+  font-size: 15px;
+  line-height: 1.75;
+  color: var(--text-primary);
+}
+
+.blog-article section {
+  margin-bottom: 2.5rem;
+}
+
+.blog-article h2 {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--heat-gold);
+  border-bottom: 1px solid var(--panel-border);
+  padding-bottom: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.blog-article p {
+  margin: 0 0 1rem;
+}
+
+.blog-article ul {
+  margin: 0 0 1rem;
+  padding-left: 1.3rem;
+}
+
+.blog-article li {
+  margin-bottom: 0.5rem;
+}
+
+.blog-article code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  background: var(--panel);
+  padding: 2px 6px;
+  border-radius: 4px;
+  color: var(--heat-gold);
+}
+
+.blog-article .code-block {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+  background: #0d0d0f;
+  border: 1px solid var(--panel-border);
+  border-left: 3px solid var(--heat-gold);
+  border-radius: 8px;
+  padding: 14px 16px;
+  overflow-x: auto;
+  margin: 0 0 1rem;
+}
+
+.blog-article .code-block code {
+  background: none;
+  padding: 0;
+  color: var(--text-primary);
+}
+
+.callout {
+  font-family: var(--font-mono);
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--heat-gold);
+  border-left: 3px solid var(--heat-gold);
+  padding-left: 1rem;
+  margin: 1.5rem 0;
+}
+
+.diagram-section {
+  margin-top: 3rem;
+  padding-top: 2rem;
+  border-top: 1px solid var(--panel-border);
+}
+
+.diagram-placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  background: var(--panel);
+  border: 1px dashed var(--panel-border);
+  border-radius: 12px;
+  padding: 3rem 1rem;
+  color: var(--text-muted);
+}
+
+.diagram-placeholder p {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+.diagram-image {
+  width: 100%;
+  border-radius: 12px;
+  border: 1px solid var(--panel-border);
+  display: block;
+}
