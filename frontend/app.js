@@ -1,5 +1,5 @@
-const GRAPHQL_URL = "http://127.0.0.1:8000/graphql";
-const REST_BASE = "http://127.0.0.1:8001";
+const GRAPHQL_URL = "https://nba-graphql-api-tbm2.onrender.com";
+const REST_BASE = "https://nba-rest-api.onrender.com";
 const HEAT_TEAM_ID = 16; // this POC only has real roster data for the Heat
 
 const SCENARIOS = {
