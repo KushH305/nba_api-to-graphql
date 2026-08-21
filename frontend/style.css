@@ -58,7 +58,6 @@ body {
   margin: 0.6rem 0 0;
 }
 
-/* --- Mode toggle --- */
 .mode-toggle {
   display: flex;
   justify-content: center;
@@ -88,7 +87,6 @@ body {
   cursor: not-allowed;
 }
 
-/* --- Preset scenario buttons --- */
 .scenario-select {
   display: flex;
   justify-content: center;
@@ -130,7 +128,6 @@ body {
   cursor: not-allowed;
 }
 
-/* --- Query builder --- */
 .builder-panel {
   display: none;
   background: var(--panel);
@@ -264,7 +261,6 @@ body {
   cursor: not-allowed;
 }
 
-/* --- Progress bar --- */
 .progress-track {
   height: 3px;
   background: var(--panel-border);
@@ -292,7 +288,6 @@ body {
   100% { transform: translateX(400%); }
 }
 
-/* --- Matchup panels --- */
 .matchup {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
@@ -431,13 +426,11 @@ body {
   letter-spacing: 0.06em;
 }
 
-/* --- JSON syntax highlighting --- */
 .json-key { color: var(--heat-gold); }
 .json-string { color: #d7d7d2; }
 .json-number { color: var(--heat-red-bright); }
 .json-boolean, .json-null { color: var(--text-muted); font-style: italic; }
 
-/* --- Coming soon section --- */
 .coming-soon {
   margin-top: 2.5rem;
   padding-top: 2rem;
@@ -466,6 +459,14 @@ body {
   border-radius: 12px;
   padding: 1.25rem;
   position: relative;
+  text-decoration: none;
+  color: inherit;
+  display: block;
+  transition: border-color 0.15s ease;
+}
+
+.coming-soon-card:hover {
+  border-color: var(--heat-gold);
 }
 
 .coming-soon-icon {
@@ -508,7 +509,6 @@ body {
   margin-top: 2rem;
 }
 
-/* --- Modal --- */
 .modal-overlay {
   display: none;
   position: fixed;
@@ -604,15 +604,4 @@ body {
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
-}
-
-.coming-soon-card {
-  text-decoration: none;
-  color: inherit;
-  display: block;
-  transition: border-color 0.15s ease;
-}
-
-.coming-soon-card:hover {
-  border-color: var(--heat-gold);
 }

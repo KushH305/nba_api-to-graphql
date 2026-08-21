@@ -2,6 +2,7 @@ const GRAPHQL_URL = "https://nba-graphql-api-tbm2.onrender.com";
 const REST_BASE = "https://nba-rest-api.onrender.com";
 const HEAT_TEAM_ID = 16; // this POC only has real roster data for the Heat
 
+
 const SCENARIOS = {
   1: {
     graphql: '{ player(name: "Bam Adebayo") { firstName lastName position jerseyNumber } }',
@@ -24,7 +25,6 @@ const SCENARIOS = {
 const statusNote = document.getElementById("status-note");
 const lastResponse = { rest: null, graphql: null };
 
-// --- Mode toggle: presets vs builder ---
 function setMode(mode) {
   document.getElementById("mode-presets-btn").classList.toggle("active", mode === "presets");
   document.getElementById("mode-builder-btn").classList.toggle("active", mode === "builder");
@@ -43,7 +43,6 @@ function toggleGamesFields() {
   document.getElementById("games-fields").classList.toggle("disabled", !checked);
 }
 
-// --- Build query + REST url list from current checkbox state (Heat only) ---
 function buildCustomScenario() {
   const teamId = HEAT_TEAM_ID;
 
@@ -98,31 +97,32 @@ async function runCustomQuery() {
   await executeScenario(scenario);
 }
 
-// --- Presets ---
 async function runScenario(num, btnEl) {
   document.querySelectorAll(".scenario-btn").forEach(b => b.classList.remove("active"));
   btnEl.classList.add("active");
   await executeScenario(SCENARIOS[num]);
 }
 
-// --- Shared execution path for both presets and the builder ---
 async function executeScenario(scenario) {
   const buttons = document.querySelectorAll(".scenario-btn, .run-btn, .mode-btn");
   buttons.forEach(b => (b.disabled = true));
-  statusNote.textContent = "Running…";
-  document.getElementById("progress-track").classList.add("active");
 
-  await Promise.all([
-    runGraphQL(scenario.graphql),
-    runRest(scenario.rest),
-  ]);
+  if (statusNote) statusNote.textContent = "Running…";
+  const progressTrack = document.getElementById("progress-track");
+  if (progressTrack) progressTrack.classList.add("active");
 
-  buttons.forEach(b => (b.disabled = false));
-  statusNote.textContent = "Both servers must be running locally (ports 8000 and 8001).";
-  document.getElementById("progress-track").classList.remove("active");
+  try {
+    await Promise.all([
+      runGraphQL(scenario.graphql),
+      runRest(scenario.rest),
+    ]);
+  } finally {
+    buttons.forEach(b => (b.disabled = false));
+    if (statusNote) statusNote.textContent = "Live demo — data pulled from a real GraphQL and REST API in real time.";
+    if (progressTrack) progressTrack.classList.remove("active");
+  }
 }
 
-// --- JSON syntax highlighter ---
 function syntaxHighlight(jsonString) {
   const escaped = jsonString
     .replace(/&/g, "&amp;")
@@ -145,7 +145,6 @@ function syntaxHighlight(jsonString) {
   );
 }
 
-// --- Modal controls ---
 function openModal(source) {
   const data = lastResponse[source];
   if (!data) return;
@@ -180,7 +179,6 @@ function copyModalContent() {
   });
 }
 
-// --- Fetch execution ---
 async function runGraphQL(query) {
   const outputEl = document.getElementById("graphql-output");
   outputEl.classList.remove("is-error");
@@ -204,7 +202,7 @@ async function runGraphQL(query) {
   } catch (err) {
     outputEl.classList.add("is-error");
     if (err instanceof TypeError) {
-      outputEl.textContent = `Can't reach the server.\n\nMake sure it's running: uvicorn ... --port 8000\n\n(${err.message})`;
+      outputEl.textContent = `Can't reach the GraphQL server.\n\n(${err.message})`;
     } else {
       outputEl.textContent = `Server error: ${err.message}`;
     }
@@ -236,7 +234,7 @@ async function runRest(urls) {
   } catch (err) {
     outputEl.classList.add("is-error");
     if (err instanceof TypeError) {
-      outputEl.textContent = `Can't reach the server.\n\nMake sure it's running: uvicorn ... --port 8001\n\n(${err.message})`;
+      outputEl.textContent = `Can't reach the REST server.\n\n(${err.message})`;
     } else {
       outputEl.textContent = `Server error: ${err.message}`;
     }
