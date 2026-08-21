@@ -30,7 +30,7 @@ app = FastAPI(title="NBA REST API", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://kush-graphql-nba.netlify.app/"],
+    allow_origins=["https://kush-graphql-nba.netlify.app"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
