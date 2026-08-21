@@ -502,6 +502,11 @@ body {
   padding: 3px 10px;
 }
 
+.coming-soon-single {
+  max-width: 480px;
+  margin: 0 auto;
+}
+
 .rate-limit-note {
   text-align: center;
   color: var(--text-muted);
